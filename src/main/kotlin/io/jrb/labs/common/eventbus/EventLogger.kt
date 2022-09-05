@@ -24,6 +24,7 @@
 package io.jrb.labs.common.eventbus
 
 import io.jrb.labs.common.logging.LoggerDelegate
+import io.jrb.labs.mqttrelay.domain.SystemEvent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -38,7 +39,12 @@ class EventLogger(private val eventBus: EventBus) {
 
     init {
         scope.launch {
-            eventBus.events.collectLatest { log.info("{}::{}", it.type, it) }
+            eventBus.events().collectLatest { event ->
+                if (event is SystemEvent)
+                    log.info("{}", event)
+                else
+                    log.debug("{}::{}", event.type, event)
+            }
         }
     }
 

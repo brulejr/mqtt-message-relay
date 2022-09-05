@@ -23,34 +23,34 @@
  */
 package io.jrb.labs.mqttrelay.service.message.indexer
 
+import io.jrb.labs.common.eventbus.EventBus
 import io.jrb.labs.common.logging.LoggerDelegate
 import io.jrb.labs.mqttrelay.domain.Message
-import io.jrb.labs.mqttrelay.service.message.ingester.MessageIngester
-import reactor.core.Disposable
+import io.jrb.labs.mqttrelay.domain.MessageEvent
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
+import org.springframework.stereotype.Service
 import reactor.core.publisher.Mono
 import javax.annotation.PostConstruct
-import javax.annotation.PreDestroy
 
-//@Service
+@Service
 class MessageIndexer(
-    private val messageRelay: MessageIngester
+    private val eventBus: EventBus
 ) {
 
     private val log by LoggerDelegate()
-    private var subscription: Disposable? = null
+
+    private val _scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     @PostConstruct
     fun init() {
         log.info("Starting {}...", javaClass.simpleName)
-        subscription = messageRelay.stream()
-            .flatMap(this::processMessage)
-            .subscribe()
-    }
-
-    @PreDestroy
-    fun destroy() {
-        log.info("Stopping {}...", javaClass.simpleName)
-        subscription!!.dispose()
+        _scope.launch {
+            eventBus.events(MessageEvent::class).collectLatest { event -> processMessage(event.data) }
+        }
     }
 
     private fun processMessage(message: Message): Mono<Message?>? {

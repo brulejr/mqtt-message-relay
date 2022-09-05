@@ -23,13 +23,22 @@
  */
 package io.jrb.labs.common.eventbus
 
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.*
+import kotlin.reflect.KClass
 
 class EventBus {
 
     private val _events = MutableSharedFlow<Event<*>>()
-    val events = _events.asSharedFlow()
+    private val _eventFlow = _events.asSharedFlow()
+
+    fun events(): Flow<Event<*>> {
+        return _eventFlow
+    }
+
+    fun <T : Event<T>> events(eventType: KClass<T>): Flow<T> {
+        val eventClass: Class<T> = eventType.java
+        return _eventFlow.filter { it.type == eventClass.simpleName }.map { eventClass.cast(it) }
+    }
 
     suspend fun <T> invokeEvent(event: Event<T>) = _events.emit(event)
 

@@ -74,7 +74,7 @@ class MessageIngestManager(
                     .doOnEach() { x -> processMessage(x.get()) }
                     .subscribe()
             }
-            eventBus.invokeEvent(SystemEvent("service.stop", _serviceName))
+            eventBus.invokeEvent(SystemEvent("service.start", _serviceName))
             _running.getAndSet(true)
         }
     }
