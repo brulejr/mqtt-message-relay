@@ -71,7 +71,7 @@ class MessageIngestManager(
                 val messageIngester: MessageIngester = it.value
                 messageIngester.start()
                 _messageSubscriptions[it.key] = messageIngester.stream()
-                    .doOnEach() { x -> processMessage(x.get()) }
+                    .doOnEach() { x -> processMessage(it.key, x.get()) }
                     .subscribe()
             }
             eventBus.invokeEvent(SystemEvent("service.start", _serviceName))
@@ -101,9 +101,9 @@ class MessageIngestManager(
         return MqttMessageIngesterImpl(brokerConfig, connectionFactory, retry)
     }
 
-    private fun processMessage(message: Message?) {
+    private fun processMessage(source: String, message: Message?) {
         _scope.launch {
-            eventBus.invokeEvent(MessageEvent("message.in", message!!))
+            eventBus.invokeEvent(MessageEvent(source,"message.in", message!!))
         }
     }
 

@@ -35,8 +35,8 @@ class EventBus {
         return _eventFlow
     }
 
-    fun <T : Event<T>> events(eventType: KClass<T>): Flow<T> {
-        val eventClass: Class<T> = eventType.java
+    fun <T, E : Event<T>> events(eventType: KClass<E>): Flow<E> {
+        val eventClass: Class<E> = eventType.java
         return _eventFlow.filter { it.type == eventClass.simpleName }.map { eventClass.cast(it) }
     }
 

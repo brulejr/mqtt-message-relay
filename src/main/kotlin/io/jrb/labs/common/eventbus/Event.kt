@@ -28,6 +28,8 @@ interface Event<out T> {
     val type: String
         get() = javaClass.simpleName
 
+    val source: String
+
     val name: String
 
     val data: T?

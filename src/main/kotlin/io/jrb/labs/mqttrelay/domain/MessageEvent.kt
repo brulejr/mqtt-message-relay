@@ -26,6 +26,7 @@ package io.jrb.labs.mqttrelay.domain
 import io.jrb.labs.common.eventbus.Event
 
 data class MessageEvent(
+    override val source: String,
     override val name: String,
     override val data: Message
 ) : Event<Message>

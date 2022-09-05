@@ -27,5 +27,6 @@ import io.jrb.labs.common.eventbus.Event
 
 data class SystemEvent(
     override val name: String,
+    override val source: String = "SYSTEM",
     override val data: String? = null
 ) : Event<String>

@@ -25,7 +25,6 @@ package io.jrb.labs.mqttrelay.service.message.indexer
 
 import io.jrb.labs.common.eventbus.EventBus
 import io.jrb.labs.common.logging.LoggerDelegate
-import io.jrb.labs.mqttrelay.domain.Message
 import io.jrb.labs.mqttrelay.domain.MessageEvent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -33,7 +32,6 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import org.springframework.stereotype.Service
-import reactor.core.publisher.Mono
 import javax.annotation.PostConstruct
 
 @Service
@@ -49,13 +47,12 @@ class MessageIndexer(
     fun init() {
         log.info("Starting {}...", javaClass.simpleName)
         _scope.launch {
-            eventBus.events(MessageEvent::class).collectLatest { event -> processMessage(event.data) }
+            eventBus.events(MessageEvent::class).collectLatest { event -> processMessageEvent(event) }
         }
     }
 
-    private fun processMessage(message: Message): Mono<Message?>? {
-        log.info("message = {}", message)
-        return Mono.empty()
+    private fun processMessageEvent(event: MessageEvent) {
+        log.info("{}::{}", event.source, event.data)
     }
 
 }
