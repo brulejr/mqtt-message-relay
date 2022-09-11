@@ -32,7 +32,7 @@ import io.jrb.labs.mqttrelay.domain.Message
 import io.jrb.labs.mqttrelay.domain.MessageEvent
 import io.jrb.labs.mqttrelay.domain.SystemEvent
 import io.jrb.labs.mqttrelay.service.message.ingester.mqtt.MqttClientFactory
-import io.jrb.labs.mqttrelay.service.message.ingester.mqtt.MqttMessageIngesterImpl
+import io.jrb.labs.mqttrelay.service.message.ingester.mqtt.MqttMessageHandlerImpl
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -54,23 +54,23 @@ class MessageIngestManager(
 
     private val _serviceName = javaClass.simpleName
     private val _running: AtomicBoolean = AtomicBoolean()
-    private val _messageIngesters: Map<String, MessageIngester>
+    private val _messageHandlers: Map<String, MessageHandler>
     private val _messageSubscriptions: MutableMap<String, Disposable> = mutableMapOf()
 
     private val _scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     init {
         log.info("Initializing {}...", _serviceName)
-        _messageIngesters = messageIngestConfig.mqtt.mapValues { createMqttMessageIngester(it.value) }
+        _messageHandlers = messageIngestConfig.mqtt.mapValues { createMqttMessageHandler(it.value) }
     }
 
     override fun start() {
         _scope.launch {
             log.info("Starting {}...", _serviceName)
-            _messageIngesters.forEach {
-                val messageIngester: MessageIngester = it.value
-                messageIngester.start()
-                _messageSubscriptions[it.key] = messageIngester.stream()
+            _messageHandlers.forEach {
+                val messageHandler: MessageHandler = it.value
+                messageHandler.start()
+                _messageSubscriptions[it.key] = messageHandler.stream()
                     .doOnEach() { x -> processMessage(it.key, x.get()) }
                     .subscribe()
             }
@@ -82,7 +82,7 @@ class MessageIngestManager(
     override fun stop() {
         _scope.launch {
             log.info("Stopping {}...", _serviceName)
-            _messageIngesters.forEach {
+            _messageHandlers.forEach {
                 it.value.stop()
                 _messageSubscriptions[it.key]?.dispose()
             }
@@ -95,10 +95,10 @@ class MessageIngestManager(
         return _running.get()
     }
 
-    private fun createMqttMessageIngester(brokerConfig: MqttBrokerConfig): MessageIngester {
+    private fun createMqttMessageHandler(brokerConfig: MqttBrokerConfig): MessageHandler {
         log.debug("Creating mqtt message ingester for {}", brokerConfig)
         val connectionFactory = MqttClientFactory(brokerConfig)
-        return MqttMessageIngesterImpl(brokerConfig, connectionFactory, retry)
+        return MqttMessageHandlerImpl(brokerConfig, connectionFactory, retry)
     }
 
     private fun processMessage(source: String, message: Message?) {

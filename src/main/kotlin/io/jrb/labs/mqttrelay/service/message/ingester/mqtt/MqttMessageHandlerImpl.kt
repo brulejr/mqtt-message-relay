@@ -28,13 +28,12 @@ import io.jrb.labs.common.logging.LoggerDelegate
 import io.jrb.labs.mqttrelay.config.MqttBrokerConfig
 import io.jrb.labs.mqttrelay.domain.Message
 import io.jrb.labs.mqttrelay.domain.MessageType
-import io.jrb.labs.mqttrelay.service.message.ingester.MessageIngester
+import io.jrb.labs.mqttrelay.service.message.ingester.MessageHandler
 import io.jrb.labs.mqttrelay.service.message.ingester.MessageIngesterException
 import io.vavr.CheckedRunnable
 import io.vavr.control.Try
 import org.eclipse.paho.client.mqttv3.*
 import org.springframework.beans.factory.annotation.Qualifier
-import org.springframework.context.SmartLifecycle
 import reactor.core.Disposable
 import reactor.core.publisher.Flux
 import reactor.core.publisher.SignalType
@@ -44,11 +43,11 @@ import reactor.core.publisher.Sinks.Many
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.function.Predicate
 
-class MqttMessageIngesterImpl(
+class MqttMessageHandlerImpl(
     private val mqttBrokerConfig: MqttBrokerConfig,
     private val mqttClientFactory: MqttClientFactory,
     @Qualifier("retryMqttConnect") private val retry: Retry
-) : MessageIngester, MqttCallback {
+) : MessageHandler, MqttCallback {
 
     private val allNessages = Predicate { _: Message -> true }
 
