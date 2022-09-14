@@ -32,7 +32,7 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 @Configuration
-@EnableConfigurationProperties(MessageIngestConfig::class)
+@EnableConfigurationProperties(MessageBrokersConfig::class)
 class ServiceJavaConfig {
 
     @Bean

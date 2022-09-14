@@ -26,7 +26,7 @@ package io.jrb.labs.mqttrelay.service.message.ingester
 import io.github.resilience4j.retry.Retry
 import io.jrb.labs.common.eventbus.EventBus
 import io.jrb.labs.common.logging.LoggerDelegate
-import io.jrb.labs.mqttrelay.config.MessageIngestConfig
+import io.jrb.labs.mqttrelay.config.MessageBrokersConfig
 import io.jrb.labs.mqttrelay.config.MqttBrokerConfig
 import io.jrb.labs.mqttrelay.domain.Message
 import io.jrb.labs.mqttrelay.domain.MessageEvent
@@ -45,7 +45,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 @Service
 class MessageIngestManager(
-    messageIngestConfig: MessageIngestConfig,
+    private val messageBrokersConfig: MessageBrokersConfig,
     private val eventBus: EventBus,
     @Qualifier("retryMqttConnect") private val retry: Retry
 ) : SmartLifecycle {
@@ -61,7 +61,7 @@ class MessageIngestManager(
 
     init {
         log.info("Initializing {}...", _serviceName)
-        _messageHandlers = messageIngestConfig.mqtt.mapValues { createMqttMessageHandler(it.value) }
+        _messageHandlers = messageBrokersConfig.mqtt.mapValues { createMqttMessageHandler(it.value) }
     }
 
     override fun start() {
@@ -102,8 +102,13 @@ class MessageIngestManager(
     }
 
     private fun processMessage(source: String, message: Message?) {
-        _scope.launch {
-            eventBus.invokeEvent(MessageEvent(source,"message.in", message!!))
+        if (message != null) {
+            val filter: Regex? = messageBrokersConfig.mqtt[source]?.injectFilter?.toRegex()
+            if ((filter === null) || filter.matches(message.topic)) {
+                _scope.launch {
+                    eventBus.invokeEvent(MessageEvent(source, "message.in", message!!))
+                }
+            }
         }
     }
 

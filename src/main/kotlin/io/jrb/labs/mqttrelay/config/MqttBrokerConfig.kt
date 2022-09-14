@@ -31,9 +31,11 @@ data class MqttBrokerConfig(
     val password: String,
     val port : Int,
     val username: String,
-    val ssl: Boolean
+    val ssl: Boolean,
+    val injectFilter: String?
 ) {
     private val TCP_URL = "tcp://%s:%d"
 
     val tcpUrl get() = format(TCP_URL, broker, port)
+
 }

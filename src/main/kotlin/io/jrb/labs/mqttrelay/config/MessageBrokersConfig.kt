@@ -27,7 +27,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.ConstructorBinding
 
 @ConstructorBinding
-@ConfigurationProperties(prefix = "application.injest")
-data class MessageIngestConfig(
+@ConfigurationProperties(prefix = "application.brokers")
+data class MessageBrokersConfig(
     val mqtt: Map<String, MqttBrokerConfig>
 )
