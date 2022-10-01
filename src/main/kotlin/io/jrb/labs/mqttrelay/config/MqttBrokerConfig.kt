@@ -26,11 +26,12 @@ package io.jrb.labs.mqttrelay.config
 import java.lang.String.format
 
 data class MqttBrokerConfig(
+    val brokerName: String,
     val broker: String,
     val qos: Int,
-    val password: String,
+    val password: String?,
     val port : Int,
-    val username: String,
+    val username: String?,
     val ssl: Boolean,
     val injectFilter: String?
 ) {

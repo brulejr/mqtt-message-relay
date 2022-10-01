@@ -46,7 +46,7 @@ class MqttClientFactory(private val mqttBrokerConfig: MqttBrokerConfig) {
             val mqttClient = MqttClient(mqttBrokerUrl, mqttClientId, mqttPersistence)
             mqttConnectionOptions.isCleanSession = true
             mqttConnectionOptions.userName = mqttBrokerConfig.username
-            mqttConnectionOptions.password = mqttBrokerConfig.password.toCharArray()
+            mqttConnectionOptions.password = mqttBrokerConfig.password?.toCharArray()
             mqttClient.connect(mqttConnectionOptions)
             mqttClient
         } catch (e: MqttException) {

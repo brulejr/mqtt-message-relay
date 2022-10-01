@@ -115,17 +115,19 @@ class MqttMessageHandlerImpl(
     }
 
     override fun start() {
-        log.info("Starting {}...", javaClass.simpleName)
+        log.info("Starting message handler '{}'", mqttBrokerConfig.brokerName)
         Try.run(retryableMqttConnect)
     }
 
     override fun stop() {
         try {
-            log.info("Stopping {}...", javaClass.simpleName)
-            mqttClient!!.disconnect()
-            running.set(false)
+            log.info("Stopping message handler '{}'...", mqttBrokerConfig.brokerName)
+            if (mqttClient != null) {
+                mqttClient!!.disconnect()
+                running.set(false)
+            }
         } catch (e: MqttException) {
-            log.error("Unable to stop service - {}", e.message)
+            log.error("Unable to stop message handler '{}' - {}", mqttBrokerConfig.brokerName, e.message)
         }
     }
 

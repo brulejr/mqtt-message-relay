@@ -52,7 +52,7 @@ class MessageIndexer(
     }
 
     private fun processMessageEvent(event: MessageEvent) {
-        log.info("{}::{}", event.source, event.data)
+        log.debug("{}::{}", event.source, event.data)
     }
 
 }
