@@ -108,7 +108,7 @@ class MqttMessageHandlerImpl(
             mqttClient!!.setCallback(this)
             running.set(true)
         } catch (e: MqttException) {
-            log.error("Unable to start message handler '{}' - {}", mqttBrokerConfig.brokerName, e.message)
+            log.error("Unable to start message handler '{}' - {}", mqttBrokerConfig.brokerName, e.message, e)
         }
     }
 

@@ -64,8 +64,8 @@ class MessageIngestManager(
     override fun start() {
         log.info("Starting {}...", _serviceName)
         _messageHandlers.forEach {
-            val messageHandler: MessageHandler = it.value
             _scope.launch {
+                val messageHandler: MessageHandler = it.value
                 messageHandler.start()
                 _messageSubscriptions[it.key] = messageHandler.stream()
                     .doOnEach() { x -> processMessage(it.key, x.get()) }
