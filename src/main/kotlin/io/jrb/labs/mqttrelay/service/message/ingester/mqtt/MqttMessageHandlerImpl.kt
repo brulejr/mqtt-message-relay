@@ -120,7 +120,7 @@ class MqttMessageHandlerImpl(
                 running.set(false)
             }
         } catch (e: MqttException) {
-            log.error("Unable to stop message handler '{}' - {}", mqttBrokerConfig.brokerName, e.message)
+            log.error("Unable to stop message handler '{}' - {}", mqttBrokerConfig.brokerName, e.message, e)
         }
     }
 
