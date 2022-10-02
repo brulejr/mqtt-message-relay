@@ -23,7 +23,6 @@
  */
 package io.jrb.labs.mqttrelay.service.message.ingester
 
-import io.github.resilience4j.retry.Retry
 import io.jrb.labs.common.eventbus.EventBus
 import io.jrb.labs.common.logging.LoggerDelegate
 import io.jrb.labs.mqttrelay.config.MessageBrokersConfig
@@ -37,7 +36,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
-import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.SmartLifecycle
 import org.springframework.stereotype.Service
 import reactor.core.Disposable
@@ -46,8 +44,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 @Service
 class MessageIngestManager(
     private val messageBrokersConfig: MessageBrokersConfig,
-    private val eventBus: EventBus,
-    @Qualifier("retryMqttConnect") private val retry: Retry
+    private val eventBus: EventBus
 ) : SmartLifecycle {
 
     private val log by LoggerDelegate()
@@ -69,10 +66,12 @@ class MessageIngestManager(
             log.info("Starting {}...", _serviceName)
             _messageHandlers.forEach {
                 val messageHandler: MessageHandler = it.value
-                messageHandler.start()
-                _messageSubscriptions[it.key] = messageHandler.stream()
-                    .doOnEach() { x -> processMessage(it.key, x.get()) }
-                    .subscribe()
+                _scope.launch {
+                    messageHandler.start()
+                    _messageSubscriptions[it.key] = messageHandler.stream()
+                        .doOnEach() { x -> processMessage(it.key, x.get()) }
+                        .subscribe()
+                }
             }
             eventBus.invokeEvent(SystemEvent("service.start", _serviceName))
             _running.getAndSet(true)
@@ -98,7 +97,7 @@ class MessageIngestManager(
     private fun createMqttMessageHandler(brokerConfig: MqttBrokerConfig): MessageHandler {
         log.debug("Creating mqtt message ingester for {}", brokerConfig)
         val connectionFactory = MqttClientFactory(brokerConfig)
-        return MqttMessageHandlerImpl(brokerConfig, connectionFactory, retry)
+        return MqttMessageHandlerImpl(brokerConfig, connectionFactory)
     }
 
     private fun processMessage(source: String, message: Message?) {

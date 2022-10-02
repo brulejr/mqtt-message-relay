@@ -24,16 +24,21 @@
 package io.jrb.labs.mqttrelay.service.message.ingester
 
 import io.jrb.labs.mqttrelay.domain.Message
-import org.springframework.context.SmartLifecycle
 import reactor.core.Disposable
 import reactor.core.publisher.Flux
 import java.util.function.Predicate
 
-interface MessageHandler : SmartLifecycle {
+interface MessageHandler {
+
+    fun isRunning(): Boolean
 
     fun publish(message: Message)
 
     fun stream(): Flux<Message>
+
+    fun start()
+
+    fun stop()
 
     fun subscribe(handler: (Message) -> Unit): Disposable?
 

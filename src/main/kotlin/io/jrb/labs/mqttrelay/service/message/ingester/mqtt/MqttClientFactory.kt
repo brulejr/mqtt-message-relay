@@ -32,6 +32,9 @@ import org.eclipse.paho.client.mqttv3.MqttConnectOptions
 import org.eclipse.paho.client.mqttv3.MqttException
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence
 
+private const val DEFAULT_PASSWORD = ""
+private const val DEFAULT_USERNAME = "anonymous"
+
 class MqttClientFactory(private val mqttBrokerConfig: MqttBrokerConfig) {
 
     private val log by LoggerDelegate()
@@ -42,13 +45,19 @@ class MqttClientFactory(private val mqttBrokerConfig: MqttBrokerConfig) {
         val mqttPersistence: MqttClientPersistence = MemoryPersistence()
         val mqttConnectionOptions = MqttConnectOptions()
         return try {
+
             log.info("Connecting to MQTT broker - url={}", mqttBrokerUrl)
+            
             val mqttClient = MqttClient(mqttBrokerUrl, mqttClientId, mqttPersistence)
+            
             mqttConnectionOptions.isCleanSession = true
-            mqttConnectionOptions.userName = mqttBrokerConfig.username
-            mqttConnectionOptions.password = mqttBrokerConfig.password?.toCharArray()
+            mqttConnectionOptions.userName = mqttBrokerConfig.username ?: DEFAULT_USERNAME
+            mqttConnectionOptions.password = (mqttBrokerConfig.password ?: DEFAULT_PASSWORD).toCharArray()
+            
             mqttClient.connect(mqttConnectionOptions)
+            
             mqttClient
+
         } catch (e: MqttException) {
             log.error("Failed to connect to MQTT broker - url={}", mqttBrokerUrl)
             throw MessageIngesterException(e.message, e)

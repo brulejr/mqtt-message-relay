@@ -23,17 +23,17 @@
  */
 package io.jrb.labs.mqttrelay.service.message.ingester.mqtt
 
-import io.github.resilience4j.retry.Retry
 import io.jrb.labs.common.logging.LoggerDelegate
 import io.jrb.labs.mqttrelay.config.MqttBrokerConfig
 import io.jrb.labs.mqttrelay.domain.Message
 import io.jrb.labs.mqttrelay.domain.MessageType
 import io.jrb.labs.mqttrelay.service.message.ingester.MessageHandler
 import io.jrb.labs.mqttrelay.service.message.ingester.MessageIngesterException
-import io.vavr.CheckedRunnable
-import io.vavr.control.Try
-import org.eclipse.paho.client.mqttv3.*
-import org.springframework.beans.factory.annotation.Qualifier
+import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken
+import org.eclipse.paho.client.mqttv3.MqttCallback
+import org.eclipse.paho.client.mqttv3.MqttClient
+import org.eclipse.paho.client.mqttv3.MqttException
+import org.eclipse.paho.client.mqttv3.MqttMessage
 import reactor.core.Disposable
 import reactor.core.publisher.Flux
 import reactor.core.publisher.SignalType
@@ -45,8 +45,7 @@ import java.util.function.Predicate
 
 class MqttMessageHandlerImpl(
     private val mqttBrokerConfig: MqttBrokerConfig,
-    private val mqttClientFactory: MqttClientFactory,
-    @Qualifier("retryMqttConnect") private val retry: Retry
+    private val mqttClientFactory: MqttClientFactory
 ) : MessageHandler, MqttCallback {
 
     private val allNessages = Predicate { _: Message -> true }
@@ -55,20 +54,6 @@ class MqttMessageHandlerImpl(
     private val running: AtomicBoolean = AtomicBoolean()
     private val messageSink: Many<Message> = Sinks.many().multicast().onBackpressureBuffer()
     private var mqttClient: MqttClient? = null
-    private val retryableMqttConnect: CheckedRunnable = Retry.decorateCheckedRunnable(
-        retry
-    ) {
-        try {
-            mqttClient = mqttClientFactory.connect()
-            mqttClient!!.subscribe("\$SYS/#")
-            mqttClient!!.subscribe("#")
-            mqttClient!!.setCallback(this)
-            running.set(true)
-        } catch (e: MqttException) {
-            log.error("Failed to connect to MQTT broker - uri={}", mqttClient?.serverURI)
-            throw MessageIngesterException(e.message, e)
-        }
-    }
 
     override fun publish(message: Message) {
         try {
@@ -115,8 +100,16 @@ class MqttMessageHandlerImpl(
     }
 
     override fun start() {
-        log.info("Starting message handler '{}'", mqttBrokerConfig.brokerName)
-        Try.run(retryableMqttConnect)
+        try {
+            log.info("Starting message handler '{}'", mqttBrokerConfig.brokerName)
+            mqttClient = mqttClientFactory.connect()
+            mqttClient!!.subscribe("\$SYS/#")
+            mqttClient!!.subscribe("#")
+            mqttClient!!.setCallback(this)
+            running.set(true)
+        } catch (e: MqttException) {
+            log.error("Unable to start message handler '{}' - {}", mqttBrokerConfig.brokerName, e.message)
+        }
     }
 
     override fun stop() {
