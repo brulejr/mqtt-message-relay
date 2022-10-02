@@ -91,7 +91,7 @@ class MessageIngestManager(
     }
 
     private fun createMqttMessageHandler(brokerConfig: MqttBrokerConfig): MessageHandler {
-        log.debug("Creating mqtt message ingester for {}", brokerConfig)
+        log.debug("Creating mqtt message handler for {}", brokerConfig)
         val connectionFactory = MqttClientFactory(brokerConfig)
         return MqttMessageHandlerImpl(brokerConfig, connectionFactory)
     }
