@@ -62,32 +62,28 @@ class MessageIngestManager(
     }
 
     override fun start() {
-        _scope.launch {
-            log.info("Starting {}...", _serviceName)
-            _messageHandlers.forEach {
-                val messageHandler: MessageHandler = it.value
-                _scope.launch {
-                    messageHandler.start()
-                    _messageSubscriptions[it.key] = messageHandler.stream()
-                        .doOnEach() { x -> processMessage(it.key, x.get()) }
-                        .subscribe()
-                }
+        log.info("Starting {}...", _serviceName)
+        _messageHandlers.forEach {
+            val messageHandler: MessageHandler = it.value
+            _scope.launch {
+                messageHandler.start()
+                _messageSubscriptions[it.key] = messageHandler.stream()
+                    .doOnEach() { x -> processMessage(it.key, x.get()) }
+                    .subscribe()
             }
-            eventBus.invokeEvent(SystemEvent("service.start", _serviceName))
-            _running.getAndSet(true)
         }
+        eventBus.sendEvent(SystemEvent("service.start", _serviceName))
+        _running.getAndSet(true)
     }
 
     override fun stop() {
-        _scope.launch {
-            log.info("Stopping {}...", _serviceName)
-            _messageHandlers.forEach {
-                it.value.stop()
-                _messageSubscriptions[it.key]?.dispose()
-            }
-            eventBus.invokeEvent(SystemEvent("service.stop", _serviceName))
-            _running.getAndSet(true)
+        log.info("Stopping {}...", _serviceName)
+        _messageHandlers.forEach {
+            it.value.stop()
+            _messageSubscriptions[it.key]?.dispose()
         }
+        eventBus.sendEvent(SystemEvent("service.stop", _serviceName))
+        _running.getAndSet(true)
     }
 
     override fun isRunning(): Boolean {
@@ -104,9 +100,7 @@ class MessageIngestManager(
         if (message != null) {
             val filter: Regex? = messageBrokersConfig.mqtt[source]?.injectFilter?.toRegex()
             if ((filter === null) || filter.matches(message.topic)) {
-                _scope.launch {
-                    eventBus.invokeEvent(MessageEvent(source, "message.in", message!!))
-                }
+                eventBus.sendEvent(MessageEvent(source, "message.in", message))
             }
         }
     }

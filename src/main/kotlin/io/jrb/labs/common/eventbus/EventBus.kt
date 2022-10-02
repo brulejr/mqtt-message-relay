@@ -24,6 +24,7 @@
 package io.jrb.labs.common.eventbus
 
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.runBlocking
 import kotlin.reflect.KClass
 
 class EventBus {
@@ -41,5 +42,7 @@ class EventBus {
     }
 
     suspend fun <T> invokeEvent(event: Event<T>) = _events.emit(event)
+
+    fun <T> sendEvent(event: Event<T>) = runBlocking { invokeEvent(event) }
 
 }
