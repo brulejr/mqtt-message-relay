@@ -21,24 +21,27 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package io.jrb.labs.mqttrelay.service.message.indexer
+package io.jrb.labs.mqttrelay.service.message.router
 
 import io.jrb.labs.common.eventbus.EventBus
 import io.jrb.labs.common.logging.LoggerDelegate
 import io.jrb.labs.mqttrelay.domain.MessageEvent
+import io.jrb.labs.mqttrelay.domain.MessageType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import org.springframework.stereotype.Component
 import javax.annotation.PostConstruct
 
+val FILTER : Regex = "^tmpjb-basement-fireplace/.*\$".toRegex()
+
 @Component
-class MessageIndexer(
+class MessageRouter(
     private val eventBus: EventBus
 ) {
-
     private val log by LoggerDelegate()
 
     private val _scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
@@ -47,12 +50,14 @@ class MessageIndexer(
     fun init() {
         log.info("Starting {}...", javaClass.simpleName)
         _scope.launch {
-            eventBus.events(MessageEvent::class).collectLatest { event -> processMessageEvent(event) }
+            eventBus.events(MessageEvent::class)
+                .filter { event -> event.data.type == MessageType.NORMAL && FILTER.matches(event.data.topic) }
+                .collectLatest { event -> processMessageEvent(event) }
         }
     }
 
     private fun processMessageEvent(event: MessageEvent) {
-        log.debug("{}::{}", event.source, event.data)
+        log.info("{}::{}", event.source, event.data)
     }
 
 }
