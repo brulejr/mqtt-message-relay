@@ -36,7 +36,7 @@ import kotlinx.coroutines.launch
 import org.springframework.stereotype.Component
 import javax.annotation.PostConstruct
 
-val FILTER : Regex = "^tmpjb-basement-fireplace/.*\$".toRegex()
+val FILTER : Regex = "^iot/.*\$".toRegex()
 
 @Component
 class MessageRouter(

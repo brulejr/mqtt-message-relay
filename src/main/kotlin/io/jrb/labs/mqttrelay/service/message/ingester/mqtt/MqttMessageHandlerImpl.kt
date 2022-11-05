@@ -103,8 +103,9 @@ class MqttMessageHandlerImpl(
         try {
             log.info("Starting message handler '{}'", mqttBrokerConfig.brokerName)
             mqttClient = mqttClientFactory.connect()
-            mqttClient!!.subscribe("\$SYS/#")
-            mqttClient!!.subscribe("#")
+            if (mqttBrokerConfig.topic != null) {
+                mqttClient!!.subscribe(mqttBrokerConfig.topic)
+            }
             mqttClient!!.setCallback(this)
             running.set(true)
         } catch (e: MqttException) {
