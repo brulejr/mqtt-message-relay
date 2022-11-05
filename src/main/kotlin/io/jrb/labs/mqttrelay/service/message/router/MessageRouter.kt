@@ -25,6 +25,7 @@ package io.jrb.labs.mqttrelay.service.message.router
 
 import io.jrb.labs.common.eventbus.EventBus
 import io.jrb.labs.common.logging.LoggerDelegate
+import io.jrb.labs.mqttrelay.config.MessageRoutingConfig
 import io.jrb.labs.mqttrelay.domain.MessageEvent
 import io.jrb.labs.mqttrelay.domain.MessageType
 import kotlinx.coroutines.CoroutineScope
@@ -40,6 +41,7 @@ val FILTER : Regex = "^iot/.*\$".toRegex()
 
 @Component
 class MessageRouter(
+    private val routingConfig: MessageRoutingConfig,
     private val eventBus: EventBus
 ) {
     private val log by LoggerDelegate()

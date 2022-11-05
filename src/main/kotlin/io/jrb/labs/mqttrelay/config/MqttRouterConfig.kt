@@ -23,35 +23,8 @@
  */
 package io.jrb.labs.mqttrelay.config
 
-import io.github.resilience4j.retry.Retry
-import io.github.resilience4j.retry.RetryRegistry
-import io.jrb.labs.common.eventbus.EventBus
-import io.jrb.labs.common.eventbus.EventLogger
-import org.springframework.boot.context.properties.EnableConfigurationProperties
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-
-@Configuration
-@EnableConfigurationProperties(
-    MessageBrokersConfig::class,
-    MessageRoutingConfig::class
-)
-class ServiceJavaConfig {
-
-    @Bean
-    fun eventBus() = EventBus()
-
-    @Bean
-    fun eventLogger(eventBus: EventBus) = EventLogger(eventBus)
-
-    @Bean
-    fun retryRegistry(): RetryRegistry {
-        return RetryRegistry.ofDefaults()
-    }
-
-    @Bean
-    fun retryMqttConnect(retryRegistry: RetryRegistry): Retry {
-        return retryRegistry.retry("mqttConnect")
-    }
-
+data class MqttRouterConfig(
+    val broker: String,
+    val topicFilter: String?
+) {
 }
