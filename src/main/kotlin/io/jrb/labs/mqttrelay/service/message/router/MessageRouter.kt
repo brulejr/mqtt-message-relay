@@ -27,8 +27,10 @@ import io.jrb.labs.common.eventbus.EventBus
 import io.jrb.labs.common.logging.LoggerDelegate
 import io.jrb.labs.mqttrelay.config.MessageRoutingConfig
 import io.jrb.labs.mqttrelay.config.MqttRouterConfig
+import io.jrb.labs.mqttrelay.domain.Message
 import io.jrb.labs.mqttrelay.domain.MessageEvent
 import io.jrb.labs.mqttrelay.domain.MessageType
+import io.jrb.labs.mqttrelay.service.message.mqtt.MessageHandlerManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -40,6 +42,7 @@ import javax.annotation.PostConstruct
 @Component
 class MessageRouter(
     private val routingConfig: MessageRoutingConfig,
+    private val messageHandlerManager: MessageHandlerManager,
     private val eventBus: EventBus
 ) {
     private val log by LoggerDelegate()
@@ -59,14 +62,20 @@ class MessageRouter(
         if (event.data.type == MessageType.NORMAL) {
             routingConfig.mappings.forEach {
                 if (it.topicPattern?.matcher(event.data.topic)?.matches() == true) {
-                    invokeMessageHandler(event, it)
+                    routeMessage(event, it)
                 }
             }
         }
     }
 
-    private fun invokeMessageHandler(event: MessageEvent, routerConfig: MqttRouterConfig) {
-        log.info("{}::{}", event.source, event.data)
+    private fun routeMessage(event: MessageEvent, routerConfig: MqttRouterConfig) {
+        val broker = routerConfig.broker
+        val message = Message(
+            id = event.data.id,
+            topic = event.data.topic,
+            payload = event.data.payload
+        )
+        messageHandlerManager.publish(broker, message)
     }
 
 }
