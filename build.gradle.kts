@@ -27,7 +27,9 @@ dependencies {
 	implementation("org.jetbrains.kotlin:kotlin-stdlib")
 
 	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
+
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
+	testImplementation("org.apache.commons:commons-lang3:3.12.0")
 	testImplementation("io.projectreactor:reactor-test")
 }
 
