@@ -23,8 +23,13 @@
  */
 package io.jrb.labs.mqttrelay.config
 
+import java.util.regex.Pattern
+
 data class MqttRouterConfig(
     val broker: String,
     val topicFilter: String?
 ) {
+
+    val topicPattern get() = if (topicFilter != null) Pattern.compile(topicFilter) else null
+
 }

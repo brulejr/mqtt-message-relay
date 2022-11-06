@@ -32,12 +32,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import org.springframework.stereotype.Component
 import javax.annotation.PostConstruct
-
-val FILTER : Regex = "^iot/.*\$".toRegex()
 
 @Component
 class MessageRouter(
@@ -53,13 +50,18 @@ class MessageRouter(
         log.info("Starting {}...", javaClass.simpleName)
         _scope.launch {
             eventBus.events(MessageEvent::class)
-                .filter { event -> event.data.type == MessageType.NORMAL && FILTER.matches(event.data.topic) }
-                .collectLatest { event -> processMessageEvent(event) }
+                .collectLatest { processMessageEvent(it) }
         }
     }
 
     private fun processMessageEvent(event: MessageEvent) {
-        log.info("{}::{}", event.source, event.data)
+        if (event.data.type == MessageType.NORMAL) {
+            routingConfig.mappings.forEach {
+                if (it.topicPattern?.matcher(event.data.topic)?.matches() == true) {
+                    log.info("{}::{}", event.source, event.data)
+                }
+            }
+        }
     }
 
 }
