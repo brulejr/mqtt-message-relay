@@ -26,6 +26,7 @@ package io.jrb.labs.mqttrelay.service.message.router
 import io.jrb.labs.common.eventbus.EventBus
 import io.jrb.labs.common.logging.LoggerDelegate
 import io.jrb.labs.mqttrelay.config.MessageRoutingConfig
+import io.jrb.labs.mqttrelay.config.MqttRouterConfig
 import io.jrb.labs.mqttrelay.domain.MessageEvent
 import io.jrb.labs.mqttrelay.domain.MessageType
 import kotlinx.coroutines.CoroutineScope
@@ -58,10 +59,14 @@ class MessageRouter(
         if (event.data.type == MessageType.NORMAL) {
             routingConfig.mappings.forEach {
                 if (it.topicPattern?.matcher(event.data.topic)?.matches() == true) {
-                    log.info("{}::{}", event.source, event.data)
+                    invokeMessageHandler(event, it)
                 }
             }
         }
+    }
+
+    private fun invokeMessageHandler(event: MessageEvent, routerConfig: MqttRouterConfig) {
+        log.info("{}::{}", event.source, event.data)
     }
 
 }
