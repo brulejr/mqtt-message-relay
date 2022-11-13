@@ -2,22 +2,27 @@ package io.jrb.labs.mqttrelay.config
 
 import io.jrb.labs.TestUtils
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 class MqttRouterConfigTest : TestUtils {
 
-    var broker: String = randomString()
-    var topicFilter: String = randomString()
+    lateinit var configMap: Map<String, Any>
+    lateinit var config: MqttRouterConfig
 
-    var config: MqttRouterConfig = MqttRouterConfig(
-        broker = broker,
-        topicFilter = topicFilter
-    )
+    @BeforeEach
+    fun setup() {
+        configMap = createBeanMapForTest(
+            klass = MqttRouterConfig::class,
+            propsToIgnore = listOf("topicPattern")
+        )
+        config = createBeanFromMap(MqttRouterConfig::class, configMap)
+    }
 
     @Test
     fun testBean() {
-        assertThat(config.broker).isEqualTo(broker)
-        assertThat(config.topicFilter).isEqualTo(topicFilter)
+        validateBean(config, configMap)
+        assertThat(config.topicPattern?.pattern()).isEqualTo(configMap["topicFilter"])
     }
 
     @Test fun testEquals() {
