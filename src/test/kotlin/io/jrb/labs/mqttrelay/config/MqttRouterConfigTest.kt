@@ -1,5 +1,6 @@
 package io.jrb.labs.mqttrelay.config
 
+import io.jrb.labs.BeanPropertyMap
 import io.jrb.labs.TestUtils
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
@@ -7,7 +8,7 @@ import org.junit.jupiter.api.Test
 
 class MqttRouterConfigTest : TestUtils {
 
-    lateinit var configMap: Map<String, Any>
+    lateinit var configMap: BeanPropertyMap
     lateinit var config: MqttRouterConfig
 
     @BeforeEach
