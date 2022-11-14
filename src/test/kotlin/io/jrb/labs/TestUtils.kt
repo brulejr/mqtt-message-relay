@@ -2,7 +2,6 @@ package io.jrb.labs
 
 import org.apache.commons.lang3.RandomStringUtils
 import org.apache.commons.lang3.RandomUtils
-import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
 import org.mockito.Mockito.mock
 import java.util.regex.Pattern
@@ -23,11 +22,11 @@ interface TestUtils {
         val map: BeanPropertyMap = klass.declaredMemberProperties.filter { !propsToIgnore.contains(it.name) }.associate {
             it.name to randomTypeOrMock(it.returnType)
         }
-        return map.entries.map {
+        return map.entries.associate {
             val key = it.key
             val value = if (overrides.containsKey(key)) overrides[key]?.let { x -> x(map) } else it.value
             key to value!!
-        }.toMap()
+        }
     }
 
     fun <T : Any > createBeanFromMap(klass: KClass<T>, map: BeanPropertyMap): T {
@@ -55,7 +54,7 @@ interface TestUtils {
         val beanProps = bean!!::class.declaredMemberProperties
         map.keys.forEach {
             val beanProp = beanProps.stream().filter { x -> x.name == it }.findFirst().get()
-            assertThat(beanProp.getter.call(bean)).isEqualTo(map.get(it))
+            assertThat(beanProp.getter.call(bean)).isEqualTo(map[it])
         }
     }
 
